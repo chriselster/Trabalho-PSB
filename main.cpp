@@ -18,8 +18,7 @@ int calcula(string s, int i) {
 				if (s[i-1] == '-') return -res;
 				else return res;
 
-				if (s[i-1] == '*' || s[i-1] == '/')
-			}
+			} else return res;
 		}
 
 		if (s[pos+1] == '+' || s[pos+1] == '-') {
@@ -61,7 +60,6 @@ int calcula(string s, int i) {
 					if (s[i-1] == '-') return -res;
 					else return res;
 
-					if (s[i-1] == '*' || s[i-1] == '/')
 				} else return res;
 			} else if (s[pos+1] == '+' || s[pos+1] == '-') {
 				int res2 = calcula(s, pos+2);
