@@ -104,6 +104,50 @@ double resolve(string a){
 			return resolve(x)+resolve(y);
 		}
 	}
+
+	for (int i = a.size()-1; i >=0; --i)
+	{
+		if(a[i] == '('){
+			p.push(a[i]);
+			continue;
+		}
+
+		if(a[i] == ')'){
+			if(p.size()){
+				p.pop();
+			}
+			continue;
+		}
+
+		if(a[i] == '*' && !p.size()){
+			string x,y;
+			for (int j = 0; j < i; ++j)
+			{
+				x+=a[j];
+			}
+			for (int j = i+1; j < a.size(); ++j)
+			{
+				y+=a[j];
+			}
+			if(neg) return -resolve(x)*resolve(y); 
+			return resolve(x)*resolve(y);
+		}
+
+		else if(a[i] == '/' && !p.size()){
+			string x,y;
+			for (int j = 0; j < i; ++j)
+			{
+				x+=a[j];
+			}
+			for (int j = i+1; j < a.size(); ++j)
+			{
+				y+=a[j];
+			}
+			if(neg) return -resolve(x)/resolve(y); 
+			return resolve(x)/resolve(y);
+		}
+	}
+
 }
 
 int main(){
