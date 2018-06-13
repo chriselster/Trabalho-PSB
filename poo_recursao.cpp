@@ -107,12 +107,12 @@ double resolve(string a){
 
 	for (int i = a.size()-1; i >=0; --i)
 	{
-		if(a[i] == '('){
+		if(a[i] == ')'){
 			p.push(a[i]);
 			continue;
 		}
 
-		if(a[i] == ')'){
+		if(a[i] == '('){
 			if(p.size()){
 				p.pop();
 			}
