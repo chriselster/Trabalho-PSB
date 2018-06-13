@@ -1,83 +1,83 @@
-#include <bits/stdc++.h>
+#include <stdio.h>
+#include <string>
+#include <math.h>
+#include <iostream>
 using namespace std;
 
-stack<char> p;
+int p;
 
-bool isNum(string a){
-	for (int i = 0; i < a.size(); ++i)
-	{
-		if(a[i]<'0' || a[i]>'9'){
-			return false;
-		}
-	}
-	return true;
-}
 
-int valor(string a){
-	int tot = 0;
-	for (int i = 0; i < a.size(); ++i)
-	{
-		tot+=pow(10,a.size()-1-i)*(a[i]-'0');
-	}
-	return tot;
-}
 
 
 double resolve(string a){
-	cout<<a<<endl;
 	bool neg = false;
 	if(a[0] == '-'){
 		neg = true;
-		a.erase(a.begin());
+		string aux;
+		for (int i = 1; i < a.size(); ++i)
+		{
+			aux+=a[i];
+		}
+		a=aux;
 	}
 
 	if(a[0]=='('){
-		p.push('(');
+		p++;
 		for (int i = 1; i < a.size()-1; ++i)
 		{
 			if(a[i] == '('){
-				p.push(a[i]);
+				p++;
 				continue;
 			}
 
 			if(a[i] == ')'){
-				if(p.size()){
-					p.pop();
+				if(p){
+					p--;
 				}
-				if(p.size()==0)break;
+				if(p==0)break;
 				continue;
 			}
 		}
-		if(p.size()==1){
-			a.erase(a.begin());
-			a.erase(a.end()-1);
-			p.pop();
+		if(p==1){
+			string aux;
+			for (int i = 1; i < a.size(); ++i)
+			{
+				aux+=a[i];
+			}
+			a=aux;
+			aux = "";
+			for (int i = 0; i < a.size()-1; ++i)
+			{
+				aux+=a[i];
+			}
+			a=aux;
+			p--;
 			if(neg) return -resolve(a);
 			return resolve(a);
 		}
 	}
 
-	if(isNum(a)){
-		if(neg)return -valor(a);
-		return valor(a);
+	if(a.size()==1){
+		if(neg)return -a[0]-'0';
+		return a[0]-'0';
 	}
 
 
 	for (int i = 0; i < a.size(); ++i)
 	{
 		if(a[i] == '('){
-			p.push(a[i]);
+			p++;
 			continue;
 		}
 
 		if(a[i] == ')'){
-			if(p.size()){
-				p.pop();
+			if(p){
+				p--;
 			}
 			continue;
 		}
 
-		if(a[i] == '+' && !p.size()){
+		if(a[i] == '+' && !p){
 			string x,y;
 			for (int j = 0; j < i; ++j)
 			{
@@ -91,7 +91,7 @@ double resolve(string a){
 			return resolve(x)+resolve(y);
 		}
 
-		else if(a[i] == '-' && !p.size()){
+		else if(a[i] == '-' && !p){
 			string x,y;
 			for (int j = 0; j < i; ++j)
 			{
@@ -101,6 +101,7 @@ double resolve(string a){
 			{
 				y+=a[j];
 			}
+			if(neg) return -resolve(x)+resolve(y); 
 			return resolve(x)+resolve(y);
 		}
 	}
@@ -108,18 +109,18 @@ double resolve(string a){
 	for (int i = a.size()-1; i >=0; --i)
 	{
 		if(a[i] == ')'){
-			p.push(a[i]);
+			p++;
 			continue;
 		}
 
 		if(a[i] == '('){
-			if(p.size()){
-				p.pop();
+			if(p){
+				p--;
 			}
 			continue;
 		}
 
-		if(a[i] == '*' && !p.size()){
+		if(a[i] == '*' && !p){
 			string x,y;
 			for (int j = 0; j < i; ++j)
 			{
@@ -133,7 +134,7 @@ double resolve(string a){
 			return resolve(x)*resolve(y);
 		}
 
-		else if(a[i] == '/' && !p.size()){
+		else if(a[i] == '/' && !p){
 			string x,y;
 			for (int j = 0; j < i; ++j)
 			{
@@ -151,11 +152,32 @@ double resolve(string a){
 }
 
 int main(){
+	bool ok = true;
 	string a,x;
 	getline (cin,a);
 	for (int i = 0; i < a.size(); ++i)
 	{
 		if(a[i]!=' ')x+=a[i];
 	}
-	cout<<resolve(x)<<endl;
+
+	for (int i = 0; i < a.size(); ++i)
+	{
+		if(a[i] == '('){
+			p++;
+			continue;
+		}
+
+		if(a[i] == ')'){
+			if(p>0){
+				p--;
+			}
+			else {
+				ok = false;
+				break;
+			}
+		}
+	}
+
+	if(ok)printf("Bem formatada\n%lf\n", resolve(x));
+	else printf("Erro de formatação\n");
 }
