@@ -1,60 +1,84 @@
+%macro print 2
+    mov eax,4
+    mov ebx,1
+    mov ecx,%1
+    mov edx,%2
+    int 80h
+%endmacro
+
+%macro scan 2
+    mov eax,3
+    mov ebx,0
+    mov ecx,%1
+    mov edx,%2
+    int 80h
+%endmacro
+
 section .data
-    len: dd 32
-    lenS: dd 32
+    malForm:   db    'Erro de formatação',10
+    malLen:    equ   $-malForm 
+    len:       dd    100
+    lenS:      dd    0
+    parQnt:    dd    0
+    
 
 section .bss
-    exp: resb 1
-    str: resb 1
+    str: resb 100
+    exp: resb 100
 	
 section .text
 	global _start
 
 _start:
-    mov eax, 3          
-    mov ebx, 0          
-    mov ecx, exp
-    mov edx, len       
-    int 80h
+    scan exp,len
     
-    ;mov eax,0x0
-    ;delSpace:
-    ;    cmp eax,[len]
-     ;   JE end
-      ;  
-       ; cmp byte [exp+eax],32        
-       ; JE inside
-       ; inc eax
+    mov eax,0x0
+    mov dword [lenS],0x0
+    delSpace:
+        cmp eax,[len]
+        JE end
         
-       ; JMP delSpace
+        cmp byte [exp+eax],32
+        JE final                
         
-       ; inside:
-        ;    mov ebx,[exp+eax+1]
-         ;   mov [exp+eax],ebx
-          ;  mov byte [exp+eax+1],32
-           ; dec dword [len]
-            
-        ;JMP delSpace    
-    ;end:
+        mov ebx,[lenS]
+        mov edx,[exp+eax]
+        mov [str+ebx],edx
+        inc dword [lenS]
+        final:
+            inc eax
+            JMP delSpace
+    end:
     
-    ;mov eax,0x0
-    ;mov dword [lenS],0x0
-    ;mov ebp,exp
-    ;delSpace:
-        ;cmp byte [ebp+eax],32
-        ;JE delSpace
-        ;mov ebx,lenS
-        ;mov edx,[ebp+eax]
-        ;mov [str+ebx],edx
-        ;inc dword [lenS]
-        ;cmp eax,[lenS]
-        ;JNE delSpace
-   
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, exp
-    mov edx, 64
-    int 80h  
+    mov eax,0x0
+    checkPar:    
+        cmp eax,[lenS]
+        JE endPar
+        
+        cmp byte [exp+eax],40
+        JNE else
+        inc dword [parQnt]
+        
+        else:
+            cmp byte [exp+eax],41
+            JNE finalPar
+            dec dword [parQnt]        
+        
+        finalPar:
+            inc eax
+            JMP checkPar
+    endPar:
+    
+    cmp dword [parQnt],0
+    JNE error
+    
+    print str,[lenS]
+    JMP finish
 
-	mov eax, 1            
-    mov ebx, 0            
-    int 80h
+    error:
+        print malForm,malLen
+
+    finish:
+        mov eax,1            
+        mov ebx,0            
+        int 80h
