@@ -15,21 +15,25 @@
 %endmacro
 
 %macro atrib 7 ; aux lenAux str lenS 1
-    mov ebp, 0
-    mov esp, %5
+    mov dword [cont], 0
+    mov dword [i], %5
     
     %6:
+        mov esp, [i]
         cmp esp, [%4]
         je %7
         
-        mov ebx, [%3+esp]
-        mov dword [%1+ebp], ebx
+        mov esp, [i]
+        mov ebp, [cont]
+        mov ah, [%3+esp]
+        mov byte [%1+ebp], ah
         
-        inc esp
-        inc ebp
+        inc dword [i]
+        inc dword [cont]
         jmp %6
     
     %7:      
+        mov ebp, [cont]
         mov dword [%2], ebp
         
 %endmacro
@@ -41,6 +45,10 @@ section .data
     lenS:      dd    0
     lenAux:    dd    0
     parQnt:    dd    0
+    p:         dd    0
+    neg:       dd    0
+    i:         dd    0
+    cont:      dd    0
     
 
 section .bss
@@ -100,28 +108,25 @@ _start:
     cmp dword [parQnt],0
     JNE error
     
-    print str, [lenS]
     jmp resolve
 
     error:
         print malForm,malLen
      
-     
     resolve:
-        mov edx, 0
-        mov esi, 0
+        
         cmp byte [str+0], 45
         
-        je seMenos
         jne senaoMenos
         
         seMenos:
-            mov edi, 1
+            mov dword [neg], 1
             
             atrib aux, lenAux, str, lenS, 1, for1, endFor1
-            print aux, [lenAux]
+            
             atrib str, lenS, aux, lenAux, 0, for2, endFor2
             
+            print str, [lenS]
                 
         senaoMenos:
         
