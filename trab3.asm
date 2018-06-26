@@ -18,19 +18,19 @@
 
 %macro atrib 7 ; aux lenAux str lenS 1
     mov dword [cont], 0
-    mov dword [i], %5
+    mov dword [j], %5
     
     %6:
-        mov eax, [i]
+        mov eax, [j]
         cmp eax, [%4]
         je %7
         
-        mov eax, [i]
+        mov eax, [j]
         mov ebx, [cont]
         mov ah, [%3+eax]
         mov byte [%1+ebx], ah
         
-        inc dword [i]
+        inc dword [j]
         inc dword [cont]
         jmp %6
     
@@ -42,7 +42,7 @@
 
 %macro pushar 4
 
-mov word [i], 0
+mov word [j], 0
 
 mov eax, %2
 mov ebx, 2
@@ -57,12 +57,12 @@ jne %3
 inc esi
 
 %3:
-    cmp dword [i], esi
+    cmp dword [j], esi
     je %4
     
-    mov edi, dword [i]
+    mov edi, dword [j]
     push word [%1+edi]
-    add word [i], 2
+    add word [j], 2
     jmp %3
     
 %4:
@@ -83,14 +83,14 @@ mov esi, %2
 jne %3
 inc esi
 
-mov dword [i], esi
+mov dword [j], esi
 
 %3:
-    cmp byte [i], 0
+    cmp byte [j], 0
     je %4
     
-    sub word [i], 2
-    mov esi, [i]
+    sub word [j], 2
+    mov esi, [j]
     pop word [%1+esi]
     
     jmp %3
@@ -124,6 +124,7 @@ section .data
     p:         dd    0
     neg:       dd    0
     i:         dd    0
+    j:         dd    0
     cont:      dd    0
     
     result:    dd    0
@@ -171,14 +172,6 @@ _start:
             JMP delSpace
     end:
     
-    print str, [lenS]
-    cmp dword [lenS], 4
-    jne qualfoi
-    
-    print certo, 4
-    
-    qualfoi:
-    
     mov eax,0x0
 
     jmp checkPar
@@ -215,6 +208,8 @@ _start:
 ; ------------------ CÁLCULO DA EXPRESSÃO ----------------------      
      
     resolve:
+    
+        mov dword [neg], 0
         
         ; if(a.size() == 1) {
         
@@ -223,23 +218,23 @@ _start:
         
         resultBase:
             print base, 8
-            cmp dword [neg],1
+            
+            cmp dword [neg],0
             jne baseNeg
             
             mov eax,[str]
-            sub eax, 48
-            mov [result],eax
-            jmp endResultBase
+            mov dword [result], eax
+            ret
             
             baseNeg:
-                mov eax,[str]
-                sub eax, 48
+                mov eax,[str+0]
                 negat eax
                 mov dword [result],eax
+                ret
         ; }
          
         endResultBase:
-        
+            
         
          
         ; if (a[0] == '-') {
@@ -265,6 +260,7 @@ _start:
         jne senaoParent
         
         seParent:
+        
             inc dword [p]
             
             ; for (int i = 1; i < a.size()-1; i++) {
@@ -272,16 +268,16 @@ _start:
             mov dword [i], 1
             
             for3:
-                mov esp, [i]
-                mov ebp, [lenS]
-                dec ebp
+                mov ecx, [i]
+                mov edx, [lenS]
+                dec edx
                 
-                cmp esp, ebp
+                cmp ecx, edx
                 je endFor3
                 
                 ; if(a[i] == '(') {
                 
-                cmp dword [str+esp], 40
+                cmp dword [str+ecx], 40
                 jne senaoParentFor3
                 
                 seParentFor3:
@@ -294,7 +290,7 @@ _start:
                 
                 ; if(a[i] == ')') {
                 
-                cmp dword [str+esp], 41
+                cmp dword [str+ecx], 41
                 jne finalFor3
 
                 cmp dword [p], 1
@@ -322,20 +318,22 @@ _start:
             jne senaoP1
             
             seP1:
+                print str, [lenS]
                 dec dword [lenS]
-                atrib str, lenS, aux, lenAux, 1, for4, endFor4
+                
+                atrib aux, lenAux, str, lenS, 1, for12, endFor12
+                atrib str, lenS, aux, lenAux, 0, for4, endFor4
+                print str, [lenS]
                 
                 dec dword [p]
                 
                 cmp dword [neg], 1
                 jne resultP1
                 
-                call resolve
-                
                 negat [result]
                 
                 resultP1:
-                
+                call resolve
                 ret
                     
             ; }
@@ -388,10 +386,12 @@ _start:
             
             menorPrec:
             
+            
             cmp byte [str+ecx],43
             jne elseMenorPrec
             cmp dword [p],0
             jne elseMenorPrec
+            
             
             pushar str, [lenS], for6, endFor6
             push word [lenS]
@@ -401,23 +401,31 @@ _start:
             atrib aux, lenAux, str, lenS, 0, for7, endFor7 ; for (int j=0; j<lenS; j++) aux += a[j]
 
             atrib str, lenS, aux, lenAux, 0, for8, endFor8 ; for (int j=0; j<lenAux; j++) a += aux[j]
+            print str, [lenS]
             call resolve
-
+            
+            
             pop word [i]
             pop word [lenS]
             popar str, [lenS], for9, endFor9
-
+               
             push word [result]
             mov ecx, [i]
+            inc ecx
+            
             atrib aux, lenAux, str, lenS, ecx, for10, endFor10
-            atrib str, lenS, aux, lenAux, ecx, for11, endFor11
+            atrib str, lenS, aux, lenAux, 0, for11, endFor11
+            print str, [lenS]
             call resolve
             
             pop word [val1]
+            
+            print val1, 1
             mov eax, [val1] ; eax = resolve(x)
+            sub eax, '0'
             mov edx, [result]
-            mov dword [val2], edx ; edx = resolve(y)
-                
+            sub edx, '0'
+            mov dword [val2], edx ; edx = resolve(y)    
             cmp dword [neg], 1
             jne senaoNegPrec
             
@@ -448,7 +456,8 @@ _start:
         jmp finish
 
     finish:
-        cmp dword [result], 9
+        add dword [result], 48
+        cmp dword [result], 51
         jne over
         
         print certo, 4
