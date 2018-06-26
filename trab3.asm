@@ -21,22 +21,22 @@
     mov dword [i], %5
     
     %6:
-        mov esp, [i]
-        cmp esp, [%4]
+        mov eax, [i]
+        cmp eax, [%4]
         je %7
         
-        mov esp, [i]
-        mov ebp, [cont]
-        mov ah, [%3+esp]
-        mov byte [%1+ebp], ah
+        mov eax, [i]
+        mov ebx, [cont]
+        mov ah, [%3+eax]
+        mov byte [%1+ebx], ah
         
         inc dword [i]
         inc dword [cont]
         jmp %6
     
     %7:      
-        mov ebp, [cont]
-        mov dword [%2], ebp
+        mov ebx, [cont]
+        mov dword [%2], ebx
         
 %endmacro
 
@@ -111,6 +111,12 @@ mov dword [i], esi
 section .data
     malForm:   db    'Erro de formatação',10
     malLen:    equ   $-malForm 
+    certo:     db    'Eh 9'
+    noPar:     db    'TonoParenteses'
+    base:      db    'TonaBase'
+    menos:     db    'TonoMenos'
+    mais:      db    'TonoMais'
+    noFor:     db    'TonoFor'
     len:       dd    100
     lenS:      dd    0
     lenAux:    dd    0
@@ -121,7 +127,8 @@ section .data
     cont:      dd    0
     
     result:    dd    0
-    
+    val1:      dd    0
+    val2:      dd    0
 
 section .bss
     str:  resb 100
@@ -137,14 +144,19 @@ section .text
 
 _start:
 ; ------------------ REMOÇÃO DE ESPAÇOS E VERIFICAÇÃO DE PARÊNTESES ----------------------  
+ 
     scan exp,len
     
     mov eax,0x0
     mov ebx,0x0
+    mov dword [lenS], 0
     
     delSpace:
         cmp eax,[len]
         JE end
+        
+        cmp byte [exp+eax], 10
+        je end
         
         cmp byte [exp+eax],32
         JE final 
@@ -158,6 +170,14 @@ _start:
             inc eax
             JMP delSpace
     end:
+    
+    print str, [lenS]
+    cmp dword [lenS], 4
+    jne qualfoi
+    
+    print certo, 4
+    
+    qualfoi:
     
     mov eax,0x0
 
@@ -185,10 +205,12 @@ _start:
     cmp dword [parQnt],0
     JNE error
     
-    jmp resolve
-
+    call resolve
+    jmp finish
+    
     error:
         print malForm,malLen
+        jmp finish
         
 ; ------------------ CÁLCULO DA EXPRESSÃO ----------------------      
      
@@ -200,6 +222,7 @@ _start:
         jne endResultBase
         
         resultBase:
+            print base, 8
             cmp dword [neg],1
             jne baseNeg
             
@@ -299,9 +322,8 @@ _start:
             jne senaoP1
             
             seP1:
-                mov esp, [lenS]
-                dec esp
-                atrib str, esp, aux, lenAux, 1, for4, endFor4
+                dec dword [lenS]
+                atrib str, lenS, aux, lenAux, 1, for4, endFor4
                 
                 dec dword [p]
                 
@@ -361,20 +383,55 @@ _start:
             jmp finalFor5
 
             ; }
-
+            
+            ; if(a[i] == '+' && !p) {
+            
             menorPrec:
-                cmp byte [str+ecx],43
-                jne elseMenorPrec
-                cmp dword [p],0
-                jne elseMenorPrec
+            
+            cmp byte [str+ecx],43
+            jne elseMenorPrec
+            cmp dword [p],0
+            jne elseMenorPrec
+            
+            pushar str, [lenS], for6, endFor6
+            push word [lenS]
+            push word [i]
+
+            mov dword [lenS], ecx ; lenS = i
+            atrib aux, lenAux, str, lenS, 0, for7, endFor7 ; for (int j=0; j<lenS; j++) aux += a[j]
+
+            atrib str, lenS, aux, lenAux, 0, for8, endFor8 ; for (int j=0; j<lenAux; j++) a += aux[j]
+            call resolve
+
+            pop word [i]
+            pop word [lenS]
+            popar str, [lenS], for9, endFor9
+
+            push word [result]
+            mov ecx, [i]
+            atrib aux, lenAux, str, lenS, ecx, for10, endFor10
+            atrib str, lenS, aux, lenAux, ecx, for11, endFor11
+            call resolve
+            
+            pop word [val1]
+            mov eax, [val1] ; eax = resolve(x)
+            mov edx, [result]
+            mov dword [val2], edx ; edx = resolve(y)
                 
-                pushar str, [lenS], for6, end6
-                push word [lenS]
-                mov [len], ecx
-                push word [len]
-                
-                atrib aux, lenAux, 
-                
+            cmp dword [neg], 1
+            jne senaoNegPrec
+            
+            seNegPrec:   
+                mov dword [result], 0
+                sub dword [result], eax
+                add dword [result], edx
+                ret
+            
+            senaoNegPrec:
+                mov dword [result], 0
+                add dword [result], eax
+                add dword [result], edx
+                ret
                 
             elseMenorPrec:
                 
@@ -382,6 +439,7 @@ _start:
                 inc dword [i]
                 jmp for5
 
+            ; }
         ; }
 
         endFor5:
@@ -390,6 +448,12 @@ _start:
         jmp finish
 
     finish:
+        cmp dword [result], 9
+        jne over
+        
+        print certo, 4
+        
+        over:
         mov eax,1            
         mov ebx,0            
         int 80h
