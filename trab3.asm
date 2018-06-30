@@ -126,6 +126,61 @@ mov dword [j], esi
     mov dword %1,eax
 %endmacro
 
+%macro numToStr 6
+
+mov eax, [%1]
+
+cmp eax, 0
+jge %6
+
+mov dword [val], 45
+print val, 1
+mov ebx, [%1]
+mov eax, 0
+sub eax, ebx
+
+%6:
+
+mov ebx, 10
+mov ecx, 0
+mov edx, 0
+
+%2:
+    cmp eax, 10
+    jl %3
+    
+    mov edx, 0
+    div ebx
+    
+    mov dword [val], edx
+    push word [val]
+    inc ecx
+    jmp %2
+
+%3:
+    
+mov dword [val], eax
+push word [val]
+inc ecx
+
+mov edx, 0
+
+%4:
+    cmp edx, ecx
+    je %5
+    
+    pop word [val]
+    add dword [val], '0'
+    
+    print val, 1
+    
+    inc edx
+    jmp %4
+
+%5:
+
+%endmacro
+
 ; ------------------ SECTION ----------------------
 
 section .data
@@ -137,6 +192,10 @@ section .data
     menos:     db    'TonoMenos'
     mais:      db    'TonoMais'
     noFor:     db    'TonoFor'
+    antes:     db    'Antes: '
+    depois:    db    'Depois: '
+    voltou:    db    'Voltou - '
+    quebra:    db    10
     len:       dd    100
     lenS:      dd    0
     lenAux:    dd    0
@@ -153,6 +212,7 @@ section .data
     space:     dd    32
     
     result:    dd    0
+    val:       dd    0
     val1:      dd    0
     val2:      dd    0
 
@@ -351,14 +411,17 @@ _start:
             jne senaoParent
             
             seP1:
+                print antes, 7
                 print str, [lenS]
                 print space, 1
                 dec dword [lenS]
                 
                 atrib aux, lenAux, str, lenS, 1, for12, endFor12
                 atrib str, lenS, aux, lenAux, 0, for4, endFor4
+                print depois, 8
                 print str, [lenS]
                 print space, 1
+                print quebra, 1
                 
                 dec dword [p]
                 
@@ -366,16 +429,15 @@ _start:
                 jne resultP1
                 
                 call resolve
-                print certo, 5
+                print voltou, 9
+                print quebra, 1
                 negat [result]
                 ret
                 
                 resultP1:
                 call resolve
-                
-                print noPar, 14
-                print space, 1
-                
+                print voltou, 9
+                print quebra, 1
                 ret
                     
             ; }
@@ -448,20 +510,29 @@ _start:
             push word [lenS]
             push word [i]
             
+            print antes, 7
             print str, [lenS]
             print space, 1
+            
             mov dword [lenS], ecx ; lenS = i
             atrib aux, lenAux, str, lenS, 0, for7, endFor7 ; for (int j=0; j<lenS; j++) aux += a[j]
-
             atrib str, lenS, aux, lenAux, 0, for8, endFor8 ; for (int j=0; j<lenAux; j++) a += aux[j]
+            
+            print depois, 8
             print str, [lenS]
             print space, 1
+            print quebra, 1
             call resolve
-            
             
             pop word [i]
             pop word [lenS]
             popar str, [lenS], for9, endFor9
+            
+            print voltou, 9
+            print quebra, 1
+            print antes, 7
+            print str, [lenS]
+            print space, 1
                            
             push word [result]
             mov ecx, [i]
@@ -469,8 +540,11 @@ _start:
             
             atrib aux, lenAux, str, lenS, ecx, for10, endFor10
             atrib str, lenS, aux, lenAux, 0, for11, endFor11
+            
+            print depois, 8
             print str, [lenS]
             print space, 1
+            print quebra, 1
             call resolve
             
             pop word [val1]
