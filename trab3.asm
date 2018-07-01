@@ -492,6 +492,7 @@ _start:
             cmp dword [p],0
             jne menosPrec
             
+            push dword [neg]
             pushar str, [lenS], for6, endFor6
             push dword [lenS]
             push dword [i]
@@ -539,6 +540,7 @@ _start:
             call resolve
             
             pop dword [val1]
+            pop dword [neg]
 
             mov eax, [val1] ; eax = resolve(x)
             mov edx, [result]
@@ -643,13 +645,140 @@ _start:
         ; }
 
         endFor5:
+        
+        ; for (int i = a.size()-1; i >=0; i--) {
+        mov ecx, [lenS]
+        dec ecx
+        mov dword [i], ecx
+
+        for78:
+            mov ecx, [i]
+            mov edx, 0
+            cmp ecx, edx
+            je endFor78
+            
+            
+            
+            ; if(a[i] == ')') {
+            cmp byte [str+ecx], 41
+            jne senaoParentFor78
+
+            seParentFor78:
+                inc dword [p]
+                jmp finalFor78
+            ; }
+            
+            senaoParentFor78:
+            
+            ; if(a[i] == '(') {
+            
+            cmp byte [str+ecx], 0
+            jne multPrec
+                        
+            cmp dword [p], 1
+            jl finalFor78
+
+            dec dword [p]
+            jmp finalFor78
+            
+            
+            ; }
+            
+            ; if(a[i] == '*' && !p) {
+            
+            multPrec:
+            print noPar, 14
+            cmp byte [str+ecx],42
+            jne finalFor78
+            
+            cmp dword [p],0
+            jne finalFor78
+            
+            push dword [neg]
+            pushar str, [lenS], for79, endFor79
+            push dword [lenS]
+            push dword [i]
+            
+            print antes, 7
+            print str, [lenS]
+            print space, 1
+            
+            mov dword [lenS], ecx ; lenS = i
+            atrib aux, lenAux, str, lenS, 0, for80, endFor80 ; for (int j=0; j<lenS; j++) aux += a[j]
+            atrib str, lenS, aux, lenAux, 0, for81, endFor81 ; for (int j=0; j<lenAux; j++) a += aux[j]
+            
+            print depois, 8
+            print str, [lenS]
+            print space, 1
+            print quebra, 1
+            call resolve
+            
+            pop dword [i]
+            pop dword [lenS]
+            popar str, [lenS], for82, endFor82
+            
+            print voltou, 9
+            print quebra, 1
+            print antes, 7
+            print str, [lenS]
+            print space, 1
+                           
+            push dword [result]
+            
+            mov ecx, [i]
+            inc ecx
+            
+            atrib aux, lenAux, str, lenS, ecx, for83, endFor83
+            atrib str, lenS, aux, lenAux, 0, for84, endFor84
+            
+            print depois, 8
+            print str, [lenS]
+            print space, 1
+            print quebra, 1
+            call resolve
+            
+            pop dword [val1]
+            pop dword [neg]
+
+            mov eax, [val1] ; eax = resolve(x)
+            mov edx, [result]
+            print quebra, 1
+            
+            cmp dword [neg], 1
+            jne senaoNegMultPrec
+            
+            seNegMultPrec:   
+                mov ebx, eax
+                mov eax, 0
+                sub eax, ebx
+                imul edx
+                mov dword [result], eax
+                ret
+            
+            senaoNegMultPrec:
+                mov ebx, eax
+                mov eax, 0
+                add eax, ebx
+                imul edx
+                mov dword [result], eax
+                ret
+                
+                
+            finalFor78:
+                dec dword [i]
+                jmp for78
+
+            ; }
+        ; }
+
+        endFor78:
             
                 
         jmp finish
 
     finish:
         mov ecx, [result]
-        cmp ecx, -9
+        cmp ecx, 0
         jne over
         print quebra, 1
         print resultado, 11
