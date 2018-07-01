@@ -622,7 +622,7 @@ _start:
 
             mov eax, [val1] ; eax = resolve(x)
             mov edx, [result]
-            print certo, 5
+
             cmp dword [neg], 1
             jne senaoNegMenosPrec
            
@@ -692,10 +692,10 @@ _start:
             multPrec:
             
             cmp byte [str+ecx],42
-            jne finalFor78
+            jne divPrec
             
             cmp dword [p],0
-            jne finalFor78
+            jne divPrec
             
             push dword [neg]
             pushar str, [lenS], for79, endFor79
@@ -766,17 +766,129 @@ _start:
                 mov dword [result], eax
                 ret
                 
+            ; }
+            
+            
+            ; if(a[i] == '/' && !p) {
+            
+            divPrec:
+            
+            cmp byte [str+ecx],47
+            jne finalFor78
+            
+            cmp dword [p],0
+            jne finalFor78
+            
+            push dword [neg]
+            pushar str, [lenS], for95, endFor95
+            push dword [lenS]
+            push dword [i]
+            
+            print antes, 7
+            print str, [lenS]
+            print space, 1
+            
+            mov dword [lenS], ecx ; lenS = i
+            atrib aux, lenAux, str, lenS, 0, for96, endFor96 ; for (int j=0; j<lenS; j++) aux += a[j]
+            atrib str, lenS, aux, lenAux, 0, for97, endFor97 ; for (int j=0; j<lenAux; j++) a += aux[j]
+            
+            print depois, 8
+            print str, [lenS]
+            print space, 1
+            print quebra, 1
+            call resolve
+            
+            pop dword [i]
+            pop dword [lenS]
+            popar str, [lenS], for98, endFor98
+
+            print voltou, 9
+            print quebra, 1
+            print antes, 7
+            print str, [lenS]
+            print space, 1
+                           
+            push dword [result]
+            
+            mov ecx, [i]
+            inc ecx
+            
+            atrib aux, lenAux, str, lenS, ecx, for99, endFor99
+            atrib str, lenS, aux, lenAux, 0, for100, endFor100
+            
+            print depois, 8
+            print str, [lenS]
+            print space, 1
+            print quebra, 1
+            call resolve
+            
+            pop dword [val1]
+            pop dword [neg]
+            
+            mov eax, [val1] ; eax = resolve(x)
+            mov ecx, [result]
+    
+            print quebra, 1
+            
+            cmp dword [neg], 1
+            jne senaoNegDivPrec
+            
+            seNegDivPrec:   
+                mov ebx, eax
+                mov eax, 0
+                sub eax, ebx
+                mov edx, 0
+                
+                cmp eax, 0
+                jge senaoVal1Neg1
+                
+                mov dword [j], eax
+                negat [j]
+                mov eax, [j]
+                
+                idiv ecx
+                mov dword [result], eax
+                negat [result]
+                ret
+                
+                senaoVal1Neg1:
+                
+                idiv ecx
+                mov dword [result], eax
+                
+                ret
+            
+            senaoNegDivPrec:
+                mov edx, 0
+                
+                cmp eax, 0
+                jge senaoVal1Neg2
+                
+                mov dword [j], eax
+                negat [j]
+                mov eax, [j]
+                
+                idiv ecx
+                mov dword [result], eax
+                negat [result]
+                ret
+                
+                senaoVal1Neg2:
+                
+                idiv ecx
+                mov dword [result], eax
+                
+                ret
+                
+            ; }
                 
             finalFor78:
                 dec dword [i]
                 jmp for78
-
-            ; }
         ; }
 
         endFor78:
-            
-                
+  
         jmp finish
 
     finish:
