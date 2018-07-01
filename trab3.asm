@@ -94,17 +94,16 @@ inc eax
 mov eax, %2
 mov ebx, 2
 mov edx, 0
+mov dword [j], eax
 
 div ebx
 
 mov eax, %2
 cmp edx, 1
+
 jne %3
 
-inc eax
-
-mov dword [j], eax
-
+inc dword [j]
 %3:
     cmp dword [j], 0
     je %4
@@ -330,14 +329,16 @@ _start:
             
             mov ah, [str]
             sub ah, '0'
-            mov byte [result], ah
+            movzx eax, ah
+            mov dword [result], eax
             
             ret
             
             baseNeg:
                 mov ah, [str]
                 sub ah, '0'
-                mov byte [result], ah
+                movzx eax, ah
+                mov dword [result], eax
                 negat [result]
                 
                 ret
@@ -428,16 +429,18 @@ _start:
                 jne resultP1
                 
                 call resolve
-                print noPar, 14
+                
                 print voltou, 9
                 print quebra, 1
                 negat [result]
+                
                 ret
                 
                 resultP1:
                 call resolve
                 print voltou, 9
                 print quebra, 1
+            
                 ret
                     
             ; }
@@ -672,7 +675,7 @@ _start:
             
             ; if(a[i] == '(') {
             
-            cmp byte [str+ecx], 0
+            cmp byte [str+ecx], 40
             jne multPrec
                         
             cmp dword [p], 1
@@ -687,7 +690,7 @@ _start:
             ; if(a[i] == '*' && !p) {
             
             multPrec:
-            print noPar, 14
+            
             cmp byte [str+ecx],42
             jne finalFor78
             
@@ -716,7 +719,7 @@ _start:
             pop dword [i]
             pop dword [lenS]
             popar str, [lenS], for82, endFor82
-            
+
             print voltou, 9
             print quebra, 1
             print antes, 7
@@ -739,7 +742,7 @@ _start:
             
             pop dword [val1]
             pop dword [neg]
-
+            
             mov eax, [val1] ; eax = resolve(x)
             mov edx, [result]
             print quebra, 1
@@ -778,13 +781,10 @@ _start:
 
     finish:
         mov ecx, [result]
-        cmp ecx, 0
-        jne over
         print quebra, 1
         print resultado, 11
         numToStr ecx, w1, ew1, f1, ef1, c1
         
-        over:
         mov eax,1            
         mov ebx,0            
         int 80h
