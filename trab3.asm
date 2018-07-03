@@ -1,5 +1,7 @@
 ; ------------------ MACROS ----------------------
 
+; ------------------ PRINT STRING ----------------------
+
 %macro print 2
     mov dword [eaz], eax
     mov dword [ebz], ebx
@@ -17,6 +19,8 @@
     mov ecx, [ecz]
     mov edx, [edz]
 %endmacro
+
+; ------------------ SCAN STRING ----------------------
 
 %macro scan 2
     mov dword [eaz], eax
@@ -36,7 +40,9 @@
     mov edx, [edz]
 %endmacro
 
-%macro atrib 7 ; aux lenAux str lenS 1
+; ------------------ ATRIBUIR STRING ----------------------
+
+%macro atrib 7
     mov dword [cont], 0
     mov dword [j], %5
     
@@ -59,6 +65,8 @@
         mov dword [%2], ebx
         
 %endmacro
+
+; ------------------ PUSH STRING ----------------------
 
 %macro pushar 4
 
@@ -89,6 +97,8 @@ inc eax
     
 %endmacro
 
+; ------------------ POP STRING ----------------------
+
 %macro popar 4
 
 mov eax, %2
@@ -118,11 +128,15 @@ inc dword [j]
     
 %endmacro
 
+; ------------------ NEGAR INTEIRO ----------------------
+
 %macro negat 1
     mov eax, %1
     mov dword %1, 0
     sub dword %1, eax
 %endmacro
+
+; ------------------ IMPRIMIR NUMERO EM STRING ----------------------
 
 %macro numToStr 6
 
@@ -185,15 +199,10 @@ mov edx, 0
 section .data
     malForm:   db    'Erro de formatação',10
     malLen:    equ   $-malForm 
-    certo:     db    'Certo'
-    noPar:     db    'TonoParenteses'
-    base:      db    'TonaBase'
-    menos:     db    'TonoMenos'
-    mais:      db    'TonoMais'
-    noFor:     db    'TonoFor'
+    string:    db    'String: '
+    base:      db    'Base'
     antes:     db    'Antes: '
     depois:    db    'Depois: '
-    voltou:    db    'Voltou - '
     resultado: db    'Resultado: '
     quebra:    db    10
     len:       dd    100
@@ -222,23 +231,25 @@ section .bss
     strX: resb 100
     strY: resb 100
 	result: resb 100
+	
 section .text
 	global _start
     
 ; ------------------ MAIN ----------------------  
 
 _start:
+
 ; ------------------ REMOÇÃO DE ESPAÇOS E VERIFICAÇÃO DE PARÊNTESES ----------------------  
  
     scan exp,len
     
-    mov ebx,0x0
+    mov ebx, 0
     mov dword [j], 0
     mov dword [lenS], 0
     
     delSpace:
         mov eax, [j]
-        cmp eax,[len]
+        cmp eax, [len]
         JE end
         
         cmp byte [exp+eax], 10
@@ -294,8 +305,10 @@ _start:
 ; ------------------ CÁLCULO DA EXPRESSÃO ----------------------      
      
     resolve:
+        print string, 8
         print str, [lenS]
         print space, 1
+        
         mov dword [neg], 0
 
         ; if (a[0] == '-') {
@@ -307,10 +320,17 @@ _start:
         seMenos:
             mov dword [neg], 1
             
-            atrib aux, lenAux, str, lenS, 1, for1, endFor1
-            atrib str, lenS, aux, lenAux, 0, for2, endFor2
+            print antes, 7
             print str, [lenS]
             print space, 1
+            
+            atrib aux, lenAux, str, lenS, 1, for1, endFor1
+            atrib str, lenS, aux, lenAux, 0, for2, endFor2
+            
+            print depois, 8
+            print str, [lenS]
+            print quebra, 1
+            
         ; }
                 
         senaoMenos:
@@ -321,8 +341,8 @@ _start:
         jne endResultBase
         
         resultBase:
-            print base, 8
-            print space, 1
+            print base, 4
+            print quebra, 1
             
             cmp dword [neg],0
             jne baseNeg
@@ -382,6 +402,7 @@ _start:
                 senaoParentFor3:
                 
                 ; if(a[i] == ')') {
+                
                 cmp byte [str+eax], 41
                 jne finalFor3
 
@@ -391,6 +412,7 @@ _start:
                 dec dword [p]
                 
                 senaoPFor3:
+                
                 cmp dword [p], 0
                 je endFor3
                 
@@ -404,7 +426,6 @@ _start:
             
             endFor3:
             
-            
             ; if (p == 1 ) {
             
             cmp dword [p], 1
@@ -416,11 +437,11 @@ _start:
                 print space, 1
                 dec dword [lenS]
                 
-                atrib aux, lenAux, str, lenS, 1, for12, endFor12
-                atrib str, lenS, aux, lenAux, 0, for4, endFor4
+                atrib aux, lenAux, str, lenS, 1, for4, endFor4
+                atrib str, lenS, aux, lenAux, 0, for5, endFor5
+                
                 print depois, 8
                 print str, [lenS]
-                print space, 1
                 print quebra, 1
                 
                 dec dword [p]
@@ -430,47 +451,42 @@ _start:
                 
                 call resolve
                 
-                print voltou, 9
-                print quebra, 1
                 negat [result]
                 
                 ret
                 
                 resultP1:
+                
                 call resolve
-                print voltou, 9
-                print quebra, 1
             
                 ret
                     
             ; }
             
-            
-            
-
         ; }
         
         senaoParent:
             
         ; for (int i = 0; i < a.size(); i++) {
+        
         mov dword [i], 0
 
-        for5:
+        for6:
             mov ecx, [i]
             mov edx, [lenS]
             cmp ecx, edx
-            je endFor5
+            je endFor6
             
             ; if(a[i] == '(') {
             cmp byte [str+ecx], 40
-            jne senaoParentFor5
+            jne senaoParentFor6
 
-            seParentFor5:
+            seParentFor6:
                 inc dword [p]
-                jmp finalFor5
+                jmp finalFor6
             ; }
             
-            senaoParentFor5:
+            senaoParentFor6:
             
             ; if(a[i] == ')') {
             
@@ -478,10 +494,10 @@ _start:
             jne maisPrec
                         
             cmp dword [p], 1
-            jl finalFor5
+            jl finalFor6
 
             dec dword [p]
-            jmp finalFor5
+            jmp finalFor6
 
             ; }
             
@@ -496,7 +512,7 @@ _start:
             jne menosPrec
             
             push dword [neg]
-            pushar str, [lenS], for6, endFor6
+            pushar str, [lenS], for7, endFor7
             push dword [lenS]
             push dword [i]
             
@@ -504,26 +520,22 @@ _start:
             print str, [lenS]
             print space, 1
             
-            
-            
             mov dword [lenS], ecx ; lenS = i
-            atrib aux, lenAux, str, lenS, 0, for7, endFor7 ; for (int j=0; j<lenS; j++) aux += a[j]
-            atrib str, lenS, aux, lenAux, 0, for8, endFor8 ; for (int j=0; j<lenAux; j++) a += aux[j]
-            
-            
+            atrib aux, lenAux, str, lenS, 0, for8, endFor8 ; for (int j=0; j<lenS; j++) aux += a[j]
+            atrib str, lenS, aux, lenAux, 0, for9, endFor9 ; for (int j=0; j<lenAux; j++) a += aux[j]
             
             print depois, 8
             print str, [lenS]
-            print space, 1
             print quebra, 1
+            
             call resolve
             
             pop dword [i]
             pop dword [lenS]
-            popar str, [lenS], for9, endFor9
-            
-            print voltou, 9
+            popar str, [lenS], for10, endFor10
+    
             print quebra, 1
+            
             print antes, 7
             print str, [lenS]
             print space, 1
@@ -533,13 +545,14 @@ _start:
             mov ecx, [i]
             inc ecx
             
-            atrib aux, lenAux, str, lenS, ecx, for10, endFor10
-            atrib str, lenS, aux, lenAux, 0, for11, endFor11
+            atrib aux, lenAux, str, lenS, ecx, for11, endFor11
+            atrib str, lenS, aux, lenAux, 0, for12, endFor12
             
             print depois, 8
             print str, [lenS]
             print space, 1
             print quebra, 1
+            
             call resolve
             
             pop dword [val1]
@@ -547,6 +560,7 @@ _start:
 
             mov eax, [val1] ; eax = resolve(x)
             mov edx, [result]
+            
             print quebra, 1
             
             cmp dword [neg], 1
@@ -570,13 +584,13 @@ _start:
                 
             menosPrec:
             cmp byte [str+ecx],45
-            jne finalFor5
+            jne finalFor6
 
             cmp dword [p],0
-            jne finalFor5
+            jne finalFor6
             
             push dword [neg]
-            pushar str, [lenS], for45, endFor45
+            pushar str, [lenS], for13, endFor13
             push dword [lenS]
             push dword [i]
             
@@ -585,20 +599,19 @@ _start:
             print space, 1
             
             mov dword [lenS], ecx ; lenS = i
-            atrib aux, lenAux, str, lenS, 0, for46, endFor46 ; for (int j=0; j<lenS; j++) aux += a[j]
-            atrib str, lenS, aux, lenAux, 0, for47, endFor47 ; for (int j=0; j<lenAux; j++) a += aux[j]
+            atrib aux, lenAux, str, lenS, 0, for14, endFor14 ; for (int j=0; j<lenS; j++) aux += a[j]
+            atrib str, lenS, aux, lenAux, 0, for15, endFor15 ; for (int j=0; j<lenAux; j++) a += aux[j]
             
             print depois, 8
             print str, [lenS]
-            print space, 1
             print quebra, 1
+            
             call resolve
             
             pop dword [i]
             pop dword [lenS]
             popar str, [lenS], for48, endFor48
             
-            print voltou, 9
             print quebra, 1
             print antes, 7
             print str, [lenS]
@@ -608,12 +621,11 @@ _start:
             
             mov ecx, [i]
             
-            atrib aux, lenAux, str, lenS, ecx, for49, endFor49
-            atrib str, lenS, aux, lenAux, 0, for50, endFor50
+            atrib aux, lenAux, str, lenS, ecx, for16, endFor16
+            atrib str, lenS, aux, lenAux, 0, for17, endFor17
             
             print depois, 8
             print str, [lenS]
-            print space, 1
             print quebra, 1
             call resolve
             
@@ -622,6 +634,8 @@ _start:
 
             mov eax, [val1] ; eax = resolve(x)
             mov edx, [result]
+            
+            print quebra, 1
 
             cmp dword [neg], 1
             jne senaoNegMenosPrec
@@ -640,38 +654,39 @@ _start:
                 mov dword [result], ebx                
                 ret
                 
-            finalFor5:
+            finalFor6:
                 inc dword [i]
-                jmp for5
+                jmp for6
 
             ; }
         ; }
 
-        endFor5:
+        endFor6:
         
         ; for (int i = a.size()-1; i >=0; i--) {
+        
         mov ecx, [lenS]
         dec ecx
         mov dword [i], ecx
 
-        for78:
+        for18:
             mov ecx, [i]
             mov edx, 0
             cmp ecx, edx
-            je endFor78
-            
-            
+            je endFor18
             
             ; if(a[i] == ')') {
+            
             cmp byte [str+ecx], 41
-            jne senaoParentFor78
+            jne senaoParentFor18
 
-            seParentFor78:
+            seParentFor18:
                 inc dword [p]
-                jmp finalFor78
+                jmp finalFor18
+                
             ; }
             
-            senaoParentFor78:
+            senaoParentFor18:
             
             ; if(a[i] == '(') {
             
@@ -679,10 +694,10 @@ _start:
             jne multPrec
                         
             cmp dword [p], 1
-            jl finalFor78
+            jl finalFor18
 
             dec dword [p]
-            jmp finalFor78
+            jmp finalFor18
             
             
             ; }
@@ -691,14 +706,14 @@ _start:
             
             multPrec:
             
-            cmp byte [str+ecx],42
+            cmp byte [str+ecx], 42
             jne divPrec
             
-            cmp dword [p],0
+            cmp dword [p], 0
             jne divPrec
             
             push dword [neg]
-            pushar str, [lenS], for79, endFor79
+            pushar str, [lenS], for19, endFor19
             push dword [lenS]
             push dword [i]
             
@@ -707,20 +722,19 @@ _start:
             print space, 1
             
             mov dword [lenS], ecx ; lenS = i
-            atrib aux, lenAux, str, lenS, 0, for80, endFor80 ; for (int j=0; j<lenS; j++) aux += a[j]
-            atrib str, lenS, aux, lenAux, 0, for81, endFor81 ; for (int j=0; j<lenAux; j++) a += aux[j]
+            atrib aux, lenAux, str, lenS, 0, for20, endFor20 ; for (int j=0; j<lenS; j++) aux += a[j]
+            atrib str, lenS, aux, lenAux, 0, for21, endFor21 ; for (int j=0; j<lenAux; j++) a += aux[j]
             
             print depois, 8
             print str, [lenS]
-            print space, 1
             print quebra, 1
+            
             call resolve
             
             pop dword [i]
             pop dword [lenS]
-            popar str, [lenS], for82, endFor82
+            popar str, [lenS], for22, endFor22
 
-            print voltou, 9
             print quebra, 1
             print antes, 7
             print str, [lenS]
@@ -731,13 +745,13 @@ _start:
             mov ecx, [i]
             inc ecx
             
-            atrib aux, lenAux, str, lenS, ecx, for83, endFor83
-            atrib str, lenS, aux, lenAux, 0, for84, endFor84
+            atrib aux, lenAux, str, lenS, ecx, for23, endFor23
+            atrib str, lenS, aux, lenAux, 0, for24, endFor24
             
             print depois, 8
             print str, [lenS]
-            print space, 1
             print quebra, 1
+            
             call resolve
             
             pop dword [val1]
@@ -745,6 +759,7 @@ _start:
             
             mov eax, [val1] ; eax = resolve(x)
             mov edx, [result]
+            
             print quebra, 1
             
             cmp dword [neg], 1
@@ -768,19 +783,18 @@ _start:
                 
             ; }
             
-            
             ; if(a[i] == '/' && !p) {
             
             divPrec:
             
             cmp byte [str+ecx],47
-            jne finalFor78
+            jne finalFor18
             
             cmp dword [p],0
-            jne finalFor78
+            jne finalFor18
             
             push dword [neg]
-            pushar str, [lenS], for95, endFor95
+            pushar str, [lenS], for25, endFor25
             push dword [lenS]
             push dword [i]
             
@@ -789,20 +803,19 @@ _start:
             print space, 1
             
             mov dword [lenS], ecx ; lenS = i
-            atrib aux, lenAux, str, lenS, 0, for96, endFor96 ; for (int j=0; j<lenS; j++) aux += a[j]
-            atrib str, lenS, aux, lenAux, 0, for97, endFor97 ; for (int j=0; j<lenAux; j++) a += aux[j]
+            atrib aux, lenAux, str, lenS, 0, for26, endFor26 ; for (int j=0; j<lenS; j++) aux += a[j]
+            atrib str, lenS, aux, lenAux, 0, for27, endFor27 ; for (int j=0; j<lenAux; j++) a += aux[j]
             
             print depois, 8
             print str, [lenS]
-            print space, 1
             print quebra, 1
+            
             call resolve
             
             pop dword [i]
             pop dword [lenS]
-            popar str, [lenS], for98, endFor98
+            popar str, [lenS], for28, endFor28
 
-            print voltou, 9
             print quebra, 1
             print antes, 7
             print str, [lenS]
@@ -813,12 +826,11 @@ _start:
             mov ecx, [i]
             inc ecx
             
-            atrib aux, lenAux, str, lenS, ecx, for99, endFor99
-            atrib str, lenS, aux, lenAux, 0, for100, endFor100
+            atrib aux, lenAux, str, lenS, ecx, for29, endFor29
+            atrib str, lenS, aux, lenAux, 0, for30, endFor30
             
             print depois, 8
             print str, [lenS]
-            print space, 1
             print quebra, 1
             call resolve
             
@@ -882,15 +894,14 @@ _start:
                 
             ; }
                 
-            finalFor78:
+            finalFor18:
                 dec dword [i]
-                jmp for78
+                jmp for18
+                
         ; }
 
-        endFor78:
+        endFor18:
   
-        jmp finish
-
     finish:
         mov ecx, [result]
         print quebra, 1
