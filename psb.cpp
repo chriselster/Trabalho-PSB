@@ -7,6 +7,27 @@ using namespace std;
 //contador de parênteses
 int p;
 
+bool isNum(string s){
+	bool ok = true;
+	for (int i = 0; i < s.size(); ++i)
+	{
+		if((s[i]>'9' || s[i]< '0')&& s[i]!=',') ok = false;
+	}
+	return ok;
+}
+
+float toNum(string s){
+	float x = 0, y;
+	int j = 0;
+	for (int i = s.size()-1; i >= 0; --i)
+	{
+		if(s[i]!= ',') x +=( s[i]-'0') * pow(10,j++);
+		else y = j;
+	}
+	x /= pow(10,y);
+	return x;
+}
+
 double resolve(string a){
 	string aux;
 	cout<<a<<endl;
@@ -61,9 +82,9 @@ double resolve(string a){
 	
 
 	//caso básico
-	if(a.size() == 1) {
-		if(neg) return -(a[0]-'0');
-		return a[0]-'0';
+	if(isNum(a)) {
+		if(neg) return -toNum(a);
+		return toNum(a);
 	}
 
 	/*---------------------------------------------*/
