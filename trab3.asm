@@ -773,22 +773,6 @@ _start:
                 jmp finalFor18
             
             
-            ; if(a[i] == '*' && !p) {
-            
-
-; SE NÃO FOR, VERIFICA SE str[i] == '*' E p == 0
- ; SE FOREM, COLOCAMOS neg, str, lenS e i NA PILHA
-; APÓS ISSO, FAZ str = str.substring(0, i)
-; CHAMAMOS A RECURSÃO PARA CALCULAR O QUE HÁ ANTES DO OPERADOR '*'
-; RECUPERAMOS i, lenS e str DA PILHA
-; COLOCAMOS NA PILHA O RESULTADO DO CÁLCULO PARA A EXPRESSÃO ANTES DO '*'
-; APÓS ISSO, FAZEMOS str = str.substring(i+1, str.size())
-; CHAMAMOS A RECURSÃO PARA CALCULAR O QUE HÁ DEPOIS DO OPERADOR '+'
-; RECUPERAMOS O RESULTADO DA EXPRESSÃO ANTES DO '+', O VALOR DE neg E COLOCAMOS O RESULTADO DA EXPRESSÃO DEPOIS DO '+' EM edx
-; VERIFICA SE str PRECEDE DE '-' (neg == 1)
-; SE FOR, FAZEMOS result = 0-eax+edx E RETORNAMOS
-; SE NÃO FOR, FAZEMOS result = eax+edx E RETORNAMOS
-
             ; SE NÃO FOR, VERIFICA SE str[i] == '*' E p == 0
             multPrec:
             
@@ -866,7 +850,7 @@ _start:
                     mov ebx, eax
                     mov eax, 0
                     sub eax, ebx
-                    imul edx
+                    imul ecx
                     mov dword [result], eax
                     ret
                 
@@ -875,12 +859,12 @@ _start:
                     mov ebx, eax
                     mov eax, 0
                     add eax, ebx
-                    imul edx
+                    imul ecx
                     mov dword [result], eax
                     ret
             
-            ; if(a[i] == '/' && !p) {
             
+            ; SE NÃO FOREM, VERIFICA SE str[i] == '/' E p == 0
             divPrec:
             
             cmp byte [str+ecx],47
@@ -889,126 +873,137 @@ _start:
             cmp dword [p],0
             jne finalFor18
             
-            push dword [neg]
-            pushar str, [lenS], for25, endFor25
-            push dword [lenS]
-            push dword [i]
-            
-            print antes, 7
-            print str, [lenS]
-            print space, 1
-            
-            mov dword [lenS], ecx ; lenS = i
-            atrib aux, lenAux, str, lenS, 0, for26, endFor26 ; for (int j=0; j<lenS; j++) aux += a[j]
-            atrib str, lenS, aux, lenAux, 0, for27, endFor27 ; for (int j=0; j<lenAux; j++) a += aux[j]
-            
-            print depois, 8
-            print str, [lenS]
-            print quebra, 1
-            
-            call resolve
-            
-            pop dword [i]
-            pop dword [lenS]
-            popar str, [lenS], for28, endFor28
-
-            print quebra, 1
-            print antes, 7
-            print str, [lenS]
-            print space, 1
-                           
-            push dword [result]
-            
-            mov ecx, [i]
-            inc ecx
-            
-            atrib aux, lenAux, str, lenS, ecx, for29, endFor29
-            atrib str, lenS, aux, lenAux, 0, for30, endFor30
-            
-            print depois, 8
-            print str, [lenS]
-            print quebra, 1
-            call resolve
-            
-            pop dword [val1]
-            pop dword [neg]
-            
-            mov eax, [val1] ; eax = resolve(x)
-            mov ecx, [result]
+            seDivPrec:
+                ; SE FOREM, COLOCAMOS neg, str, lenS e i NA PILHA
+                push dword [neg]
+                pushar str, [lenS], for25, endFor25
+                push dword [lenS]
+                push dword [i]
+                
+                ;print antes, 7
+                ;print str, [lenS]
+                ;print space, 1
+                
+                mov dword [lenS], ecx ; lenS = i
+                
+                ; APÓS ISSO, FAZ str = str.substring(0, i)
+                atrib aux, lenAux, str, lenS, 0, for26, endFor26 ; for (int j=0; j<lenS; j++) aux += a[j]
+                atrib str, lenS, aux, lenAux, 0, for27, endFor27 ; for (int j=0; j<lenAux; j++) a += aux[j]
+                
+                ;print depois, 8
+                ;print str, [lenS]
+                ;print quebra, 1
+                
+                ; CHAMAMOS A RECURSÃO PARA CALCULAR O QUE HÁ ANTES DO OPERADOR '/'
+                call resolve
+                
+                ; RECUPERAMOS i, lenS e str DA PILHA
+                pop dword [i]
+                pop dword [lenS]
+                popar str, [lenS], for28, endFor28
     
-            print quebra, 1
-            
-            cmp dword [neg], 1
-            jne senaoNegDivPrec
-            
-            seNegDivPrec:   
-                mov ebx, eax
-                mov eax, 0
-                sub eax, ebx
-                mov edx, 0
+                ;print quebra, 1
+                ;print antes, 7
+                ;print str, [lenS]
+                ;print space, 1
                 
-                cmp eax, 0
-                jge senaoVal1Neg1
+                ; COLOCAMOS NA PILHA O RESULTADO DO CÁLCULO PARA A EXPRESSÃO ANTES DO '/'
+                push dword [result]
                 
-                mov dword [j], eax
-                negat [j]
-                mov eax, [j]
+                mov ecx, [i]
+                inc ecx
                 
-                idiv ecx
-                mov dword [result], eax
-                negat [result]
-                ret
+                ; APÓS ISSO, FAZEMOS str = str.substring(i+1, str.size())
+                atrib aux, lenAux, str, lenS, ecx, for29, endFor29
+                atrib str, lenS, aux, lenAux, 0, for30, endFor30
                 
-                senaoVal1Neg1:
+                ;print depois, 8
+                ;print str, [lenS]
+                ;print quebra, 1
                 
-                idiv ecx
-                mov dword [result], eax
+                ; CHAMAMOS A RECURSÃO PARA CALCULAR O QUE HÁ DEPOIS DO OPERADOR '/'
+                call resolve
                 
-                ret
-            
-            senaoNegDivPrec:
-                mov edx, 0
+                ; RECUPERAMOS O RESULTADO DA EXPRESSÃO ANTES DO '/', O VALOR DE neg E COLOCAMOS O RESULTADO DA EXPRESSÃO DEPOIS DO '/' EM ecx
+                pop eax
+                pop dword [neg]
+                mov ecx, [result]
+        
+                ;print quebra, 1
                 
-                cmp eax, 0
-                jge senaoVal1Neg2
+                ; VERIFICA SE str PRECEDE DE '-' (neg == 1)
+                cmp dword [neg], 1
+                jne senaoNegDivPrec
                 
-                mov dword [j], eax
-                negat [j]
-                mov eax, [j]
+                ; SE FOR, FAZEMOS result = 0-eax/edx E RETORNAMOS
+                seNegDivPrec:   
+                    mov ebx, eax
+                    mov eax, 0
+                    sub eax, ebx
+                    mov edx, 0
+                    
+                    cmp eax, 0
+                    jge senaoVal1Neg1
+                    
+                    mov dword [j], eax
+                    negat [j]
+                    mov eax, [j]
+                    
+                    idiv ecx
+                    mov dword [result], eax
+                    negat [result]
+                    ret
+                    
+                    senaoVal1Neg1:
+                    
+                    idiv ecx
+                    mov dword [result], eax
+                    
+                    ret
                 
-                idiv ecx
-                mov dword [result], eax
-                negat [result]
-                ret
+                ; SE NÃO FOR, FAZEMOS result = eax/edx E RETORNAMOS
+                senaoNegDivPrec:
+                    mov edx, 0
+                    
+                    cmp eax, 0
+                    jge senaoVal1Neg2
+                    
+                    mov dword [j], eax
+                    negat [j]
+                    mov eax, [j]
+                    
+                    idiv ecx
+                    mov dword [result], eax
+                    negat [result]
+                    ret
+                    
+                    senaoVal1Neg2:
+                    
+                    idiv ecx
+                    mov dword [result], eax
+                    
+                    ret
                 
-                senaoVal1Neg2:
-                
-                idiv ecx
-                mov dword [result], eax
-                
-                ret
-                
-            ; }
-                
+            ; INCREMENTA i E VOLTA PARA O INICIO DO LOOP  
             finalFor18:
                 dec dword [i]
                 jmp for18
-                
-        ; }
 
         endFor18:
-  
+        
+    ; FINAL DO ALGORITMO (APÓS O CÁLCULO DA EXPRESSÃO)
     finish:
-        mov eax, [erro]
-        cmp eax, 1
+        ; VERIFICA SE HÁ ERRO DE FORMATAÇÃO (erro == 1)
+        cmp dword [erro], 1
         je over
         
+        ; SE NÂO, IMPRIME O RESULTADO
         mov ecx, [result]
-        print quebra, 1
         print formatada, 13
         print quebra, 1
         numToStr ecx, w1, ew1, f1, ef1, c1
         
+        ; ENCERRAMENTO DO ALGORITMO
         over:
         mov eax,1            
         mov ebx,0            
